@@ -29,9 +29,9 @@ include:
 
 ### 1. Install dependencies
 
-If you don't have `yarn` installed, run `npm install --global yarn`.
+If you don't have `pnpm` installed, run `npm install --global pnpm`.
 
-Run `yarn`.
+Run `pnpm install`.
 
 ### 2. Configure Convex
 
@@ -110,7 +110,7 @@ This monorepo template includes the following packages/apps:
 
 Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
 
-To install a new package, `cd` into that directory, such as [packages/backend](./packages/backend/), and then run `yarn add mypackage@latest`
+To install a new package, `cd` into that directory, such as [packages/backend](./packages/backend/), and then run `pnpm add mypackage@latest`
 
 ### Utilities
 
