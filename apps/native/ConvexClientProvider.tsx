@@ -9,11 +9,21 @@ console.log("[DEBUG] ConvexClientProvider loading...");
 console.log("[DEBUG] EXPO_PUBLIC_CONVEX_URL:", process.env.EXPO_PUBLIC_CONVEX_URL);
 console.log("[DEBUG] EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY:", process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
-const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL);
+const convexUrl = process.env.EXPO_PUBLIC_CONVEX_URL;
+console.log("[DEBUG] Creating ConvexReactClient with URL:", convexUrl);
+
+if (!convexUrl || convexUrl.includes('clerk')) {
+  console.error("[ERROR] Invalid Convex URL detected! URL contains 'clerk' domain:", convexUrl);
+  console.error("[ERROR] Please update EXPO_PUBLIC_CONVEX_URL in .env.local to use your Convex deployment URL");
+}
+
+const convex = new ConvexReactClient(convexUrl);
 
 export default function ConvexClientProvider({ children }) {
   useEffect(() => {
     console.log("[DEBUG] ConvexClientProvider mounted");
+    console.log("[DEBUG] Current Convex URL:", convexUrl);
+    console.log("[DEBUG] WebSocket will connect to:", convexUrl?.replace('https://', 'wss://'));
   }, []);
 
   return (
@@ -23,7 +33,14 @@ export default function ConvexClientProvider({ children }) {
         console.error("[DEBUG] ClerkProvider error:", error);
       }}
     >
-      <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+      <ConvexProviderWithClerk 
+        client={convex} 
+        useAuth={useAuth}
+        onError={(error) => {
+          console.error("[DEBUG] ConvexProvider error:", error);
+          console.error("[DEBUG] Error stack:", error?.stack);
+        }}
+      >
         {children}
       </ConvexProviderWithClerk>
     </ClerkProvider>

@@ -9,6 +9,8 @@ import {
   TextInput,
   Keyboard,
   Animated,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
 import { AntDesign } from "@expo/vector-icons";
@@ -26,6 +28,7 @@ export default function CreateNoteScreen({ navigation }) {
     useState(false);
   const [noteContent, setNoteContent] = useState("");
   const [noteTitle, setNoteTitle] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
   const footerY = new Animated.Value(0);
   const toggleAdvancedSummarization = () => {
     setIsAdvancedSummarizationEnabled(!isAdvancedSummarizationEnabled);
@@ -69,12 +72,55 @@ export default function CreateNoteScreen({ navigation }) {
   });
 
   const createUserNote = async () => {
-    await createNote({
+    console.log("[DEBUG] Create Note button pressed");
+    console.log("[DEBUG] Note data:", {
       title: noteTitle,
       content: noteContent,
       isSummary: isAdvancedSummarizationEnabled,
     });
-    navigation.navigate("NotesDashboardScreen");
+
+    // Validation
+    if (!noteTitle.trim()) {
+      Alert.alert("Error", "Please enter a title for your note");
+      return;
+    }
+    if (!noteContent.trim()) {
+      Alert.alert("Error", "Please enter content for your note");
+      return;
+    }
+
+    setIsCreating(true);
+    
+    try {
+      console.log("[DEBUG] Calling createNote mutation...");
+      const noteId = await createNote({
+        title: noteTitle.trim(),
+        content: noteContent.trim(),
+        isSummary: isAdvancedSummarizationEnabled,
+      });
+      console.log("[DEBUG] Note created successfully with ID:", noteId);
+      navigation.navigate("NotesDashboardScreen");
+    } catch (error) {
+      console.error("[ERROR] Failed to create note:", error);
+      console.error("[ERROR] Error details:", {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+      });
+      
+      let errorMessage = "Failed to create note. ";
+      if (error.message?.includes("User not found")) {
+        errorMessage += "Please make sure you're logged in.";
+      } else if (error.message?.includes("NetworkError") || error.message?.includes("Failed to fetch")) {
+        errorMessage += "Please check your internet connection.";
+      } else {
+        errorMessage += error.message || "Please try again.";
+      }
+      
+      Alert.alert("Error", errorMessage);
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   return (
@@ -166,9 +212,19 @@ export default function CreateNoteScreen({ navigation }) {
           { transform: [{ translateY: footerTranslateY }] },
         ]}
       >
-        <TouchableOpacity onPress={createUserNote} style={styles.newNoteButton}>
-          <AntDesign name="pluscircle" size={20} color="#fff" />
-          <Text style={styles.newNoteButtonText}>Create a New Note</Text>
+        <TouchableOpacity 
+          onPress={createUserNote} 
+          style={[styles.newNoteButton, isCreating && styles.newNoteButtonDisabled]}
+          disabled={isCreating}
+        >
+          {isCreating ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <>
+              <AntDesign name="pluscircle" size={20} color="#fff" />
+              <Text style={styles.newNoteButtonText}>Create a New Note</Text>
+            </>
+          )}
         </TouchableOpacity>
       </Animated.View>
     </View>
@@ -313,5 +369,8 @@ const styles = StyleSheet.create({
     bottom: 0,
     alignSelf: "center",
     // ... other styles you need
+  },
+  newNoteButtonDisabled: {
+    opacity: 0.7,
   },
 });
