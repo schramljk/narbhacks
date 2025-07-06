@@ -17,6 +17,9 @@ importers:
 
   apps/native:
     dependencies:
+      '@babel/runtime':
+        specifier: ^7.25.0
+        version: 7.27.6
       '@clerk/clerk-expo':
         specifier: ^2.13.2
         version: 2.14.2(@types/react@19.0.14)(expo-auth-session@6.2.1(expo@53.0.17(@babel/core@7.28.0)(react-native-webview@13.13.5(react-native@0.79.4(@babel/core@7.28.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.4(@babel/core@7.28.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.4(@babel/core@7.28.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(expo-web-browser@14.2.0(expo@53.0.17(@babel/core@7.28.0)(react-native-webview@13.13.5(react-native@0.79.4(@babel/core@7.28.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.4(@babel/core@7.28.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.4(@babel/core@7.28.0)(@types/react@19.0.14)(react@19.0.0)))(react-dom@19.0.0(react@19.0.0))(react-native@0.79.4(@babel/core@7.28.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
@@ -38,6 +41,9 @@ importers:
       '@react-navigation/native-stack':
         specifier: ^7.3.21
         version: 7.3.21(@react-navigation/native@7.1.14(react-native@0.79.4(@babel/core@7.28.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native-safe-area-context@5.4.0(react-native@0.79.4(@babel/core@7.28.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native-screens@4.11.1(react-native@0.79.4(@babel/core@7.28.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.4(@babel/core@7.28.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      convex:
+        specifier: ^1.25.2
+        version: 1.25.2(@clerk/clerk-react@5.32.4(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0)
       expo:
         specifier: ~53.0.12
         version: 53.0.17(@babel/core@7.28.0)(react-native-webview@13.13.5(react-native@0.79.4(@babel/core@7.28.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.4(@babel/core@7.28.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
@@ -47,15 +53,27 @@ importers:
       expo-auth-session:
         specifier: ~6.2.0
         version: 6.2.1(expo@53.0.17(@babel/core@7.28.0)(react-native-webview@13.13.5(react-native@0.79.4(@babel/core@7.28.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.4(@babel/core@7.28.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.4(@babel/core@7.28.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      expo-constants:
+        specifier: ^17.1.7
+        version: 17.1.7(expo@53.0.17(@babel/core@7.28.0)(react-native-webview@13.13.5(react-native@0.79.4(@babel/core@7.28.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.4(@babel/core@7.28.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.4(@babel/core@7.28.0)(@types/react@19.0.14)(react@19.0.0))
       expo-font:
         specifier: ~13.3.1
         version: 13.3.2(expo@53.0.17(@babel/core@7.28.0)(react-native-webview@13.13.5(react-native@0.79.4(@babel/core@7.28.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.4(@babel/core@7.28.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0)
+      expo-modules-core:
+        specifier: ~1.12.11
+        version: 1.12.26
       expo-system-ui:
         specifier: ~5.0.9
         version: 5.0.10(expo@53.0.17(@babel/core@7.28.0)(react-native-webview@13.13.5(react-native@0.79.4(@babel/core@7.28.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.4(@babel/core@7.28.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native-web@0.20.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-native@0.79.4(@babel/core@7.28.0)(@types/react@19.0.14)(react@19.0.0))
       expo-web-browser:
         specifier: ~14.2.0
         version: 14.2.0(expo@53.0.17(@babel/core@7.28.0)(react-native-webview@13.13.5(react-native@0.79.4(@babel/core@7.28.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.4(@babel/core@7.28.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.4(@babel/core@7.28.0)(@types/react@19.0.14)(react@19.0.0))
+      invariant:
+        specifier: ^2.2.4
+        version: 2.2.4
+      memoize-one:
+        specifier: ^6.0.0
+        version: 6.0.0
       react:
         specifier: 19.0.0
         version: 19.0.0
@@ -206,6 +224,9 @@ importers:
         specifier: ^4.45.0
         version: 4.104.0(ws@8.18.3)
     devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.4
       typescript:
         specifier: ^5.7.3
         version: 5.8.3
@@ -3407,6 +3428,9 @@ packages:
   expo-modules-autolinking@2.1.13:
     resolution: {integrity: sha512-+SaiYkdP3LXOFm/26CHMHBof9Xq/0MHNDzL/K0OwPgHLhZ6wpDWIDYWRHNueWYtGpAeLw2XAhR0HX4FNtU09qw==}
     hasBin: true
+
+  expo-modules-core@1.12.26:
+    resolution: {integrity: sha512-y8yDWjOi+rQRdO+HY+LnUlz8qzHerUaw/LUjKPU/mX8PRXP4UUPEEp5fjAwBU44xjNmYSHWZDwet4IBBE+yQUA==}
 
   expo-modules-core@2.4.2:
     resolution: {integrity: sha512-RCb0wniYCJkxwpXrkiBA/WiNGxzYsEpL0sB50gTnS/zEfX3DImS2npc4lfZ3hPZo1UF9YC6OSI9Do+iacV0NUg==}
@@ -9934,6 +9958,10 @@ snapshots:
       glob: 10.4.5
       require-from-string: 2.0.2
       resolve-from: 5.0.0
+
+  expo-modules-core@1.12.26:
+    dependencies:
+      invariant: 2.2.4
 
   expo-modules-core@2.4.2:
     dependencies:
