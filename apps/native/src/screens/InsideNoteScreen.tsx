@@ -14,7 +14,6 @@ const { width } = Dimensions.get("window");
 
 export default function InsideNoteScreen({ route, navigation }) {
   const { item } = route.params;
-  console.log({ item });
   const [activeTab, setActiveTab] = useState("original"); // State to manage active tab
 
   return (

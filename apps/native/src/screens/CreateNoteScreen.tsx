@@ -72,12 +72,6 @@ export default function CreateNoteScreen({ navigation }) {
   });
 
   const createUserNote = async () => {
-    console.log("[DEBUG] Create Note button pressed");
-    console.log("[DEBUG] Note data:", {
-      title: noteTitle,
-      content: noteContent,
-      isSummary: isAdvancedSummarizationEnabled,
-    });
 
     // Validation
     if (!noteTitle.trim()) {
@@ -92,21 +86,13 @@ export default function CreateNoteScreen({ navigation }) {
     setIsCreating(true);
     
     try {
-      console.log("[DEBUG] Calling createNote mutation...");
       const noteId = await createNote({
         title: noteTitle.trim(),
         content: noteContent.trim(),
         isSummary: isAdvancedSummarizationEnabled,
       });
-      console.log("[DEBUG] Note created successfully with ID:", noteId);
       navigation.navigate("NotesDashboardScreen");
     } catch (error) {
-      console.error("[ERROR] Failed to create note:", error);
-      console.error("[ERROR] Error details:", {
-        message: error.message,
-        stack: error.stack,
-        name: error.name,
-      });
       
       let errorMessage = "Failed to create note. ";
       if (error.message?.includes("User not found")) {

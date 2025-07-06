@@ -50,10 +50,7 @@ export const summary = internalAction({
     // Pull the message content out of the response
     const messageContent = output.choices[0]?.message.content;
 
-    console.log({ messageContent });
-
     const parsedOutput = JSON.parse(messageContent!);
-    console.log({ parsedOutput });
 
     await ctx.runMutation(internal.openai.saveSummary, {
       id: id,

@@ -16,52 +16,31 @@ const LoginScreen = ({ navigation }) => {
   });
 
   useEffect(() => {
-    console.log("[DEBUG] LoginScreen mounted");
-    console.log("[DEBUG] User loaded:", userLoaded);
-    console.log("[DEBUG] Auth loaded:", authLoaded);
-    console.log("[DEBUG] Is signed in:", isSignedIn);
-    console.log("[DEBUG] User:", user);
-    
     if (isSignedIn) {
-      console.log("[DEBUG] User already signed in, navigating to dashboard");
       navigation.navigate("NotesDashboardScreen");
     }
   }, [userLoaded, authLoaded, isSignedIn, user]);
 
   const onPress = async (authType: string) => {
-    console.log(`[DEBUG] Starting ${authType} OAuth flow...`);
     try {
       if (authType === "google") {
-        console.log("[DEBUG] Calling startGoogleAuthFlow...");
         const result = await startGoogleAuthFlow();
-        console.log("[DEBUG] Google OAuth result:", JSON.stringify(result, null, 2));
         
         const { createdSessionId, setActive, signIn, signUp } = result;
         
         if (createdSessionId) {
-          console.log("[DEBUG] Session created successfully:", createdSessionId);
-          console.log("[DEBUG] Calling setActive...");
           await setActive({ session: createdSessionId });
-          console.log("[DEBUG] Session activated, navigating to NotesDashboardScreen...");
           navigation.navigate("NotesDashboardScreen");
-          console.log("[DEBUG] Navigation complete");
         } else {
-          console.log("[DEBUG] No session created. Full result:", result);
-          
           // Handle sign-up flow for new users
           if (signUp && signUp.status === "missing_requirements") {
-            console.log("[DEBUG] Sign-up needs completion. Missing fields:", signUp.missingFields);
-            
             // Check if phone number is truly required or optional
             const isPhoneRequired = signUp.requiredFields.includes("phone_number");
             
             if (isPhoneRequired) {
               // If phone is required, we need to handle this differently
-              console.log("[DEBUG] Phone number is required by Clerk configuration");
-              
               // For now, just try to create the account anyway
               try {
-                console.log("[DEBUG] Attempting to update sign-up with empty phone number...");
                 await signUp.update({
                   phoneNumber: "+1234567890" // Dummy number - you should handle this properly
                 });
@@ -69,12 +48,10 @@ const LoginScreen = ({ navigation }) => {
                 const { createdSessionId: newSessionId } = await signUp.create();
                 
                 if (newSessionId) {
-                  console.log("[DEBUG] Sign-up completed! Session ID:", newSessionId);
                   await setActive({ session: newSessionId });
                   navigation.navigate("NotesDashboardScreen");
                 }
               } catch (updateError) {
-                console.error("[DEBUG] Failed to update sign-up:", updateError);
                 Alert.alert(
                   "Configuration Issue",
                   "Your Clerk dashboard requires a phone number for sign-ups. Please update your Clerk dashboard settings to make phone number optional, or implement a phone number collection screen.",
@@ -84,20 +61,17 @@ const LoginScreen = ({ navigation }) => {
             } else {
               // Phone is optional, just create the user
               try {
-                console.log("[DEBUG] Attempting to complete sign-up...");
                 const { createdSessionId: newSessionId } = await signUp.create();
                 
                 if (newSessionId) {
-                  console.log("[DEBUG] Sign-up completed! Session ID:", newSessionId);
                   await setActive({ session: newSessionId });
                   navigation.navigate("NotesDashboardScreen");
                 }
               } catch (signUpError) {
-                console.error("[DEBUG] Sign-up completion error:", signUpError);
+                // Sign-up error handled silently
               }
             }
           } else if (signIn && signIn.firstFactorVerification?.error) {
-            console.log("[DEBUG] Sign-in error:", signIn.firstFactorVerification.error);
             Alert.alert(
               "Sign In Error",
               "This Google account is not associated with an existing user. Please sign up first.",
@@ -106,26 +80,16 @@ const LoginScreen = ({ navigation }) => {
           }
         }
       } else if (authType === "apple") {
-        console.log("[DEBUG] Calling startAppleAuthFlow...");
         const result = await startAppleAuthFlow();
-        console.log("[DEBUG] Apple OAuth result:", JSON.stringify(result, null, 2));
         
         const { createdSessionId, setActive } = result;
         
         if (createdSessionId) {
-          console.log("[DEBUG] Session created successfully:", createdSessionId);
           await setActive({ session: createdSessionId });
-          console.log("[DEBUG] Session activated, navigating to NotesDashboardScreen...");
           navigation.navigate("NotesDashboardScreen");
         }
       }
     } catch (err) {
-      console.error("[DEBUG] OAuth error details:", {
-        message: err.message,
-        stack: err.stack,
-        error: err
-      });
-      
       Alert.alert(
         "Authentication Error",
         `Failed to sign in with ${authType}. Error: ${err.message || "Unknown error"}`,
