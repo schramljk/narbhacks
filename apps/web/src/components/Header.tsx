@@ -65,6 +65,14 @@ export default function Header() {
                         See your Notes
                       </button>
                     </Link>
+                    <Link href="/habits">
+                      <button
+                        type="button"
+                        className=" text-white text-center text-xl not-italic font-normal leading-[normal] font-montserrat px-[22px] py-[11px] button"
+                      >
+                        Habit Tracker
+                      </button>
+                    </Link>
                     <UserNav
                       image={user?.imageUrl}
                       name={user?.fullName!}
@@ -130,6 +138,16 @@ export default function Header() {
                   Get Started
                 </Link>
               </div>
+              {user && (
+                <div className="flex gap-6 items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
+                  <Link
+                    href="/habits"
+                    className=" text-white text-center text-xl not-italic font-normal leading-[normal] font-montserrat px-5 py-1.5 button"
+                  >
+                    Habit Tracker
+                  </Link>
+                </div>
+              )}
             </div>
           </DisclosurePanel>
         </>

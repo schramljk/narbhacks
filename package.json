@@ -18,5 +18,8 @@
     "apps/*",
     "packages/*"
   ],
-  "packageManager": "pnpm@9.15.1"
+  "packageManager": "pnpm@9.15.1",
+  "dependencies": {
+    "@clerk/nextjs": "^6.23.3"
+  }
 }
