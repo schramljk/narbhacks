@@ -5,7 +5,7 @@ import { api } from "@packages/backend/convex/_generated/api";
 import { CheckCircle, Circle, MoreVertical, Target } from "lucide-react";
 import { Button } from "@/components/common/button";
 import { useState } from "react";
-import { HabitDetailsDialog } from "./HabitDetailsDialog";
+import { HabitDetailsDialog } from "@/components/habits";
 
 interface HabitCardProps {
   habit: {
@@ -27,12 +27,25 @@ export function HabitCard({ habit }: HabitCardProps) {
   const today = new Date().toISOString().split('T')[0];
 
   const handleToggle = async () => {
-    await markCompleted({
-      habitId: habit._id as any,
-      date: today,
-      completed: !habit.todayCompleted,
-      count: habit.targetCount ? (habit.todayCompleted ? 0 : 1) : undefined,
-    });
+    if (habit.targetCount) {
+      // For habits with target counts, increment/decrement the count
+      const newCount = habit.todayCompleted ? habit.todayCount - 1 : habit.todayCount + 1;
+      const isCompleted = newCount >= habit.targetCount;
+      
+      await markCompleted({
+        habitId: habit._id as any,
+        date: today,
+        completed: isCompleted,
+        count: Math.max(0, newCount), // Ensure count doesn't go below 0
+      });
+    } else {
+      // For simple yes/no habits, just toggle completion
+      await markCompleted({
+        habitId: habit._id as any,
+        date: today,
+        completed: !habit.todayCompleted,
+      });
+    }
   };
 
   const getColorClasses = (color?: string) => {
@@ -100,7 +113,12 @@ export function HabitCard({ habit }: HabitCardProps) {
               </div>
             ) : (
               <span className="text-sm text-gray-600">
-                {habit.todayCompleted ? 'Completed today' : 'Not completed today'}
+                {habit.todayCompleted 
+                  ? 'Completed today' 
+                  : habit.todayCount > 0 
+                    ? `In progress (${habit.todayCount}/${habit.targetCount})`
+                    : 'Not started today'
+                }
               </span>
             )}
           </div>
@@ -120,7 +138,10 @@ export function HabitCard({ habit }: HabitCardProps) {
             ) : (
               <Circle className="w-4 h-4" />
             )}
-            {habit.todayCompleted ? 'Done' : 'Mark Done'}
+            {habit.targetCount 
+              ? (habit.todayCompleted ? 'Done' : `+1 (${habit.todayCount}/${habit.targetCount})`)
+              : (habit.todayCompleted ? 'Done' : 'Mark Done')
+            }
           </Button>
         </div>
       </div>
