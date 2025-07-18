@@ -26,6 +26,32 @@ export function HabitCard({ habit }: HabitCardProps) {
   const markCompleted = useMutation(api.habits.markCompleted);
   const today = new Date().toISOString().split('T')[0];
 
+  const handleIncrement = async () => {
+    if (habit.targetCount) {
+      const newCount = Math.min(habit.todayCount + 1, habit.targetCount);
+      const isCompleted = newCount >= habit.targetCount;
+      await markCompleted({
+        habitId: habit._id as any,
+        date: today,
+        completed: isCompleted,
+        count: newCount,
+      });
+    }
+  };
+
+  const handleDecrement = async () => {
+    if (habit.targetCount) {
+      const newCount = Math.max(habit.todayCount - 1, 0);
+      const isCompleted = newCount >= habit.targetCount;
+      await markCompleted({
+        habitId: habit._id as any,
+        date: today,
+        completed: isCompleted,
+        count: newCount,
+      });
+    }
+  };
+
   const handleToggle = async () => {
     if (habit.targetCount) {
       // For habits with target counts, increment/decrement the count
@@ -97,10 +123,28 @@ export function HabitCard({ habit }: HabitCardProps) {
           <div className="flex items-center gap-2">
             {habit.targetCount ? (
               <div className="flex items-center gap-2">
+                <button
+                  onClick={handleDecrement}
+                  className="w-7 h-7 flex items-center justify-center rounded-full border border-gray-300 bg-white text-lg font-bold text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+                  disabled={habit.todayCount <= 0}
+                  aria-label="Decrement"
+                  type="button"
+                >
+                  –
+                </button>
                 <span className="text-sm text-gray-600">
                   {habit.todayCount}/{habit.targetCount}
                 </span>
-                <div className="flex gap-1">
+                <button
+                  onClick={handleIncrement}
+                  className="w-7 h-7 flex items-center justify-center rounded-full border border-gray-300 bg-white text-lg font-bold text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+                  disabled={habit.todayCount >= habit.targetCount}
+                  aria-label="Increment"
+                  type="button"
+                >
+                  +
+                </button>
+                <div className="flex gap-1 ml-2">
                   {Array.from({ length: habit.targetCount }, (_, i) => (
                     <div
                       key={i}
@@ -115,34 +159,31 @@ export function HabitCard({ habit }: HabitCardProps) {
               <span className="text-sm text-gray-600">
                 {habit.todayCompleted 
                   ? 'Completed today' 
-                  : habit.todayCount > 0 
-                    ? `In progress (${habit.todayCount}/${habit.targetCount})`
-                    : 'Not started today'
+                  : 'Not started today'
                 }
               </span>
             )}
           </div>
 
-          <Button
-            onClick={handleToggle}
-            variant={habit.todayCompleted ? "default" : "outline"}
-            size="sm"
-            className={`flex items-center gap-2 ${
-              habit.todayCompleted 
-                ? 'bg-green-600 hover:bg-green-700' 
-                : 'hover:bg-green-50 hover:border-green-300'
-            }`}
-          >
-            {habit.todayCompleted ? (
-              <CheckCircle className="w-4 h-4" />
-            ) : (
-              <Circle className="w-4 h-4" />
-            )}
-            {habit.targetCount 
-              ? (habit.todayCompleted ? 'Done' : `+1 (${habit.todayCount}/${habit.targetCount})`)
-              : (habit.todayCompleted ? 'Done' : 'Mark Done')
-            }
-          </Button>
+          {!habit.targetCount && (
+            <Button
+              onClick={handleToggle}
+              variant={habit.todayCompleted ? "default" : "outline"}
+              size="sm"
+              className={`flex items-center gap-2 ${
+                habit.todayCompleted 
+                  ? 'bg-green-600 hover:bg-green-700' 
+                  : 'hover:bg-green-50 hover:border-green-300'
+              }`}
+            >
+              {habit.todayCompleted ? (
+                <CheckCircle className="w-4 h-4" />
+              ) : (
+                <Circle className="w-4 h-4" />
+              )}
+              {habit.todayCompleted ? 'Done' : 'Mark Done'}
+            </Button>
+          )}
         </div>
       </div>
 

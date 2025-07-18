@@ -280,3 +280,100 @@ export const getDashboard = query({
     };
   },
 }); 
+
+// Get habit completion stats per day for the last 30 days
+export const getCompletionHistory = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+    const userId = identity.subject;
+    const today = new Date();
+    const days = 30;
+    const result: { date: string; completed: number }[] = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      // Count completed entries for this day
+      const entries = await ctx.db
+        .query("habitEntries")
+        .withIndex("by_user_date", (q) => q.eq("userId", userId).eq("date", dateStr))
+        .collect();
+      const completed = entries.filter(e => e.completed).length;
+      result.push({ date: dateStr, completed });
+    }
+    return result;
+  },
+}); 
+
+// Analytics & Insights for dashboard
+export const getAnalytics = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+    const userId = identity.subject;
+
+    // Get all entries for this user
+    const allEntries = await ctx.db
+      .query("habitEntries")
+      .withIndex("by_user_date", (q) => q.eq("userId", userId))
+      .collect();
+
+    // Group by date
+    const byDate: Record<string, { completed: number; total: number }> = {};
+    for (const entry of allEntries) {
+      if (!byDate[entry.date]) byDate[entry.date] = { completed: 0, total: 0 };
+      byDate[entry.date].total++;
+      if (entry.completed) byDate[entry.date].completed++;
+    }
+
+    // Calculate overall completion rate
+    const totalCompletions = allEntries.filter(e => e.completed).length;
+    const totalPossible = allEntries.length;
+    const overallCompletionRate = totalPossible > 0 ? (totalCompletions / totalPossible) * 100 : 0;
+
+    // Last 7 days
+    const today = new Date();
+    const last7: string[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(today.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      last7.push(dateStr);
+    }
+    let last7Completions = 0, last7Possible = 0;
+    for (const date of last7) {
+      if (byDate[date]) {
+        last7Completions += byDate[date].completed;
+        last7Possible += byDate[date].total;
+      }
+    }
+    const last7DaysCompletionRate = last7Possible > 0 ? (last7Completions / last7Possible) * 100 : 0;
+
+    // Best/worst day
+    let bestDay = null, worstDay = null, max = -1, min = 1e9;
+    for (const date in byDate) {
+      if (byDate[date].completed > max) {
+        max = byDate[date].completed;
+        bestDay = date;
+      }
+      if (byDate[date].completed < min) {
+        min = byDate[date].completed;
+        worstDay = date;
+      }
+    }
+
+    return {
+      overallCompletionRate: Math.round(overallCompletionRate),
+      last7DaysCompletionRate: Math.round(last7DaysCompletionRate),
+      bestDay,
+      bestDayCount: max === -1 ? 0 : max,
+      worstDay,
+      worstDayCount: min === 1e9 ? 0 : min,
+    };
+  },
+}); 
