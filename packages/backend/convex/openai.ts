@@ -43,13 +43,23 @@ export const summary = internalAction({
     content: v.string(),
   },
   handler: async (ctx, { id, title, content }) => {
+    // Check if we already have a summary to avoid duplicate generation
+    const existingNote = await ctx.runQuery(internal.notes.getNote, { id });
+    if (existingNote?.summary && !existingNote.summary.includes('Failed to generate')) {
+      console.log("Summary already exists, skipping generation");
+      return;
+    }
     try {
-      const prompt = `Please provide a concise summary of this journal entry. Focus on the key points, emotions, and main events mentioned.
+      // Truncate content to reduce token usage
+      const maxContentLength = 1000; // Limit content length
+      const truncatedContent = content.length > maxContentLength 
+        ? content.substring(0, maxContentLength) + '...' 
+        : content;
+
+      const prompt = `Summarize this journal entry in 2-3 sentences:
 
 Title: ${title}
-Content: ${content}
-
-Please return a clear, well-structured summary that captures the essence of this entry.`;
+Content: ${truncatedContent}`;
 
       const apiKey = process.env.OPENAI_API_KEY;
       if (!apiKey) {
@@ -75,8 +85,8 @@ Please return a clear, well-structured summary that captures the essence of this
           { role: "user", content: prompt },
         ],
         model: "gpt-3.5-turbo-0125", // Using the cheapest available model
-        max_tokens: 150, // Reduced token limit to save costs
-        temperature: 0.3, // Lower temperature for more consistent results
+        max_tokens: 100, // Further reduced token limit to save costs
+        temperature: 0.1, // Lower temperature for more consistent results
       });
 
       const messageContent = output.choices[0]?.message.content;

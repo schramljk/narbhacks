@@ -1,32 +1,78 @@
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
+import { Button } from "@/components/common/button";
+import { ArrowRight, Sparkles, BookOpen, Calendar } from "lucide-react";
 
 const FooterHero = () => {
   return (
-    <div className="bg-primary">
-      <div className="flex flex-wrap md:flex-nowrap justify-between container py-20 px-6 sm:px-0">
-        <div className="max-w-[802px]">
-          <h2 className="font-montserrat text-wrap text-white not-italic text-3xl md:text-[57px] font-semibold sm:leading-[109.3%] sm:tracking-[-1.425px] leading-[97.3%] tracking-[-0.75px] pb-[31px] sm:pb-[38px]">
-            Start Your Intelligent Note-Taking Journey
-          </h2>
-          <p className="text-white max-w-[681px] text-xl sm:text-3xl not-italic font-normal leading-[103.3%] tracking-[-0.75px] font-montserrat pb-[66px] sm:pb-[53px]">
-            Sign up now and experience the power of AI-enhanced note-taking with
-            UseNotes
-          </p>
-          <Link href={"/notes"}>
-            <button className="linear_gradient flex max-w-[438px] w-full justify-center items-center gap-2.5 shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] px-8 py-4 rounded-[11px]  text-black text-xl sm:text-3xl not-italic font-semibold leading-[90.3%] tracking-[-0.75px]">
-              Get Started For Free
-            </button>
-          </Link>
-        </div>
-        <div className="mt-20 md:mt-0">
-          <Image
-            src="/images/monitor.png"
-            alt="hero"
-            width={560}
-            height={456}
-          />
+    <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800">
+      <div className="max-w-7xl mx-auto px-4 py-24">
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="space-y-8">
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 text-white rounded-full text-sm font-medium">
+                <Sparkles className="w-4 h-4" />
+                Ready to Get Started?
+              </div>
+              <h2 className="text-4xl sm:text-6xl font-bold text-white leading-tight">
+                Start Your Intelligent <br />
+                <span className="bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">
+                  Note-Taking Journey
+                </span>
+              </h2>
+            </div>
+            
+            <p className="text-xl text-blue-100 leading-relaxed max-w-2xl">
+              Sign up now and experience the power of AI-enhanced note-taking with MosAIc
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Button asChild size="lg" className="text-lg px-8 py-4 bg-white text-blue-600 hover:bg-gray-100">
+                <Link href="/notes" className="flex items-center gap-2">
+                  Get Started For Free
+                  <ArrowRight className="w-5 h-5" />
+                </Link>
+              </Button>
+            </div>
+
+            {/* Feature highlights */}
+            <div className="grid grid-cols-2 gap-6 pt-8">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <BookOpen className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="font-semibold text-white">Smart Journaling</p>
+                  <p className="text-sm text-blue-100">AI-powered insights</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <Calendar className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="font-semibold text-white">Habit Tracking</p>
+                  <p className="text-sm text-blue-100">Build better habits</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Image */}
+          <div className="relative">
+            <div className="relative max-w-lg mx-auto">
+              <div className="absolute inset-0 bg-white/10 rounded-3xl blur-3xl"></div>
+              <div className="relative bg-white/10 backdrop-blur-sm rounded-3xl p-8">
+                <Image
+                  src="/images/monitor.png"
+                  width={500}
+                  height={400}
+                  alt="MosAIc App Preview"
+                  className="w-full h-auto rounded-2xl"
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

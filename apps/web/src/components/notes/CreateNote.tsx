@@ -2,10 +2,11 @@
 
 import { Fragment, useRef, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
-import Image from "next/image";
 import Checkbox from "./Checkbox";
 import { api } from "@packages/backend/convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
+import { Button } from "@/components/common/button";
+import { Calendar, FileText, Plus, Sparkles, X } from "lucide-react";
 
 interface CreateNoteProps {
   open?: boolean;
@@ -58,30 +59,10 @@ export default function CreateNote({ open: externalOpen, onOpenChange }: CreateN
   };
 
   return (
-    <>
-      <div className="flex justify-center items-center">
-        <button
-          onClick={() => setOpen(true)}
-          className="button text-[#EBECEF] flex gap-4 justify-center items-center text-center px-8 sm:px-16 py-2"
-        >
-          <Image
-            src={"/images/Add.png"}
-            width={40}
-            height={40}
-            alt="search"
-            className="float-right sm:w-[40px] sm:h-[40px] w-6 h-6"
-          />
-          <span className="text-[17px] sm:text-3xl not-italic font-medium leading-[79%] tracking-[-0.75px]">
-            {" "}
-            New Journal Entry
-          </span>
-        </button>
-      </div>
-
-      <Transition.Root show={open} as={Fragment}>
+    <Transition.Root show={open} as={Fragment}>
         <Dialog
           as="div"
-          className="relative z-10"
+          className="relative z-[60]"
           initialFocus={cancelButtonRef}
           onClose={setOpen}
         >
@@ -97,7 +78,7 @@ export default function CreateNote({ open: externalOpen, onOpenChange }: CreateN
             <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
           </Transition.Child>
 
-          <form className="fixed inset-0 z-10 w-screen overflow-y-auto">
+          <div className="fixed inset-0 z-[60] w-screen overflow-y-auto">
             <div className="flex min-h-full items-end justify-center p-2 text-center sm:items-center sm:p-0">
               <Transition.Child
                 as={Fragment}
@@ -108,104 +89,123 @@ export default function CreateNote({ open: externalOpen, onOpenChange }: CreateN
                 leaveFrom="opacity-100 translate-y-0 sm:scale-100"
                 leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
               >
-                <Dialog.Panel className="relative transform overflow-hidden rounded-[10px] bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-[719px]">
-                  <div className="bg-white px-4 pb-4 pt-5 sm:p-8 sm:pb-4">
-                    <>
-                      <div className="mt-3  sm:mt-0 text-left">
-                        <Dialog.Title
-                          as="h3"
-                          className="text-black text-center text-xl sm:text-left sm:text-[35px] pb-6 sm:pb-8 not-italic font-semibold leading-[90.3%] tracking-[-0.875px]"
-                        >
-                          New Journal Entry
-                        </Dialog.Title>
-                        <div className="mt-2 space-y-3">
-                          <div className="pb-2">
-                            <label
-                              htmlFor="date"
-                              className=" text-black text-[17px] sm:text-2xl not-italic font-medium leading-[90.3%] tracking-[-0.6px]"
-                            >
-                              Date
-                            </label>
-                            <div className="mt-2">
-                              <input
-                                id="date"
-                                name="date"
-                                type="date"
-                                value={date}
-                                onChange={(e) => setDate(e.target.value)}
-                                className="border shadow-[0px_1px_2px_0px_rgba(16,24,40,0.05)] rounded-lg border-solid border-[#D0D5DD] bg-white w-full py-2.5 px-[14px] text-black text-[17px] not-italic font-light leading-[90.3%] tracking-[-0.425px] sm:text-2xl"
-                              />
-                            </div>
-                          </div>
-
-                          <div className="pb-2">
-                            <label
-                              htmlFor="title"
-                              className=" text-black text-[17px] sm:text-2xl not-italic font-medium leading-[90.3%] tracking-[-0.6px]"
-                            >
-                              Title
-                            </label>
-                            <div className="mt-2">
-                              <input
-                                id="title"
-                                name="title"
-                                type="text"
-                                placeholder="What's on your mind today?"
-                                autoComplete="title"
-                                value={title}
-                                onChange={(e) => setTitle(e.target.value)}
-                                className="border shadow-[0px_1px_2px_0px_rgba(16,24,40,0.05)] rounded-lg border-solid border-[#D0D5DD] bg-white w-full py-2.5 px-[14px] text-black text-[17px] not-italic font-light leading-[90.3%] tracking-[-0.425px] sm:text-2xl"
-                              />
-                            </div>
-                          </div>
-
-                          <div className="">
-                            <label
-                              htmlFor="description"
-                              className=" text-black text-[17px] sm:text-2xl not-italic font-medium leading-[90.3%] tracking-[-0.6px]"
-                            >
-                              Journal Entry
-                            </label>
-                            <div className="mt-2 pb-[18px]">
-                              <textarea
-                                id="description"
-                                name="description"
-                                rows={8}
-                                placeholder="Write about your day, thoughts, feelings, or anything you'd like to remember..."
-                                className="block w-full rounded-md border-0 py-1.5  border-[#D0D5DD] text-2xl shadow-xs ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600  sm:leading-6 text-black text-[17px] not-italic font-light leading-[90.3%] tracking-[-0.425px] sm:text-2xl"
-                                value={content}
-                                onChange={(e) => setContent(e.target.value)}
-                              />
-                            </div>
-                            <p className="text-black text-[17px] sm:text-2xl not-italic font-medium leading-[90.3%] tracking-[-0.6px]">
-                              AI Summary
-                            </p>
-                          </div>
-
-                          <Checkbox
-                            openaiKeySet={openaiKeySet}
-                            isChecked={isChecked}
-                            checkHandler={() => setIsChecked(!isChecked)}
-                          />
-                        </div>
-                      </div>
-                    </>
-                  </div>
-                  <div className=" px-4 py-3 mb-5 flex justify-center items-center">
-                    <button
+                <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl">
+                  {/* Header */}
+                  <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                    <div className="flex items-center gap-3">
+                      <Plus className="w-6 h-6 text-blue-600" />
+                      <Dialog.Title as="h3" className="text-xl font-semibold text-gray-900">
+                        New Journal Entry
+                      </Dialog.Title>
+                    </div>
+                    <Button
                       type="button"
-                      className="button text-white text-center text-[17px] sm:text-2xl not-italic font-semibold leading-[90.3%] tracking-[-0.6px] px-[70px] py-2"
-                      onClick={createUserNote}
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setOpen(false)}
+                      className="text-gray-400 hover:text-gray-600"
                     >
+                      <X className="w-5 h-5" />
+                    </Button>
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-6 space-y-6">
+                    {/* Date Field */}
+                    <div>
+                      <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4" />
+                          Date
+                        </div>
+                      </label>
+                      <input
+                        id="date"
+                        name="date"
+                        type="date"
+                        value={date}
+                        onChange={(e) => setDate(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+
+                    {/* Title Field */}
+                    <div>
+                      <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-4 h-4" />
+                          Title
+                        </div>
+                      </label>
+                      <input
+                        id="title"
+                        name="title"
+                        type="text"
+                        placeholder="What's on your mind today?"
+                        autoComplete="title"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+
+                    {/* Content Field */}
+                    <div>
+                      <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-4 h-4" />
+                          Journal Entry
+                        </div>
+                      </label>
+                      <textarea
+                        id="description"
+                        name="description"
+                        rows={8}
+                        placeholder="Write about your day, thoughts, feelings, or anything you'd like to remember..."
+                        value={content}
+                        onChange={(e) => setContent(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                      />
+                    </div>
+
+                    {/* AI Summary Section */}
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Sparkles className="w-4 h-4 text-blue-600" />
+                        <p className="text-sm font-medium text-gray-700">AI Summary</p>
+                      </div>
+                      <Checkbox
+                        openaiKeySet={openaiKeySet}
+                        isChecked={isChecked}
+                        checkHandler={() => setIsChecked(!isChecked)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setOpen(false)}
+                      ref={cancelButtonRef}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={createUserNote}
+                      className="flex items-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" />
                       Save Entry
-                    </button>
+                    </Button>
                   </div>
                 </Dialog.Panel>
               </Transition.Child>
-            </div>
-          </form>
+                      </div>
+        </div>
         </Dialog>
       </Transition.Root>
-    </>
   );
 }

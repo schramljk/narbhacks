@@ -7,6 +7,8 @@ import Link from "next/link";
 import { useUser } from "@clerk/clerk-react";
 import { UserNav } from "./common/UserNav";
 import { usePathname } from "next/navigation";
+import { Button } from "@/components/common/button";
+import { BookOpen, Calendar, Menu, X } from "lucide-react";
 
 type NavigationItem = {
   name: string;
@@ -15,8 +17,8 @@ type NavigationItem = {
 };
 
 const navigation: NavigationItem[] = [
-  { name: "Benefits", href: "#Benefits", current: true },
-  { name: "Reviews", href: "#reviews", current: false },
+  { name: "Features", href: "#Benefits", current: true },
+  { name: "Testimonials", href: "#reviews", current: false },
 ];
 
 export default function Header() {
@@ -24,128 +26,136 @@ export default function Header() {
   const pathname = usePathname();
 
   return (
-    <Disclosure as="nav" className=" ">
+    <Disclosure as="nav" className="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-50">
       {({ open }) => (
         <>
-          <div className="flex items-center bg-white h-16 sm:h-20">
-            <div className="container px-2 sm:px-0">
-              <div className="relative flex h-16 items-center justify-between">
-                <div className="flex sm:hidden shrink-0 items-center">
-                  <Logo isMobile={true} />
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="flex items-center justify-between h-16">
+              {/* Logo */}
+              <div className="flex items-center">
+                <Logo />
+              </div>
+
+              {/* Desktop Navigation - Only for non-logged-in users */}
+              {pathname === "/" && !user && (
+                <div className="hidden md:flex items-center space-x-8">
+                  {navigation.map((item) => (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        const element = document.querySelector(item.href);
+                        if (element) {
+                          element.scrollIntoView({ behavior: 'smooth' });
+                        }
+                      }}
+                    >
+                      {item.name}
+                    </Link>
+                  ))}
                 </div>
-                <div className="sm:flex hidden shrink-0 items-center">
-                  <Logo />
-                </div>
-                {pathname === "/" && (
-                  <div className="flex flex-1 items-center justify-center ">
-                    <div className="hidden sm:ml-6 sm:block">
-                      <ul className="flex space-x-28">
-                        {navigation.map((item) => (
-                          <li key={item.name}>
-                            <Link
-                              href={item.href}
-                              className="text-[#2D2D2D] text-center text-xl not-italic font-normal leading-[normal]"
-                              aria-current={item.current ? "page" : undefined}
-                            >
-                              {item.name}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                )}
+              )}
+
+              {/* Desktop Actions */}
+              <div className="hidden md:flex items-center space-x-4">
                 {user ? (
-                  <div className="hidden sm:flex absolute inset-y-0 right-0 gap-6 items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-                    <Link href="/notes">
-                      <button
-                        type="button"
-                        className=" text-white text-center text-xl not-italic font-normal leading-[normal] font-montserrat px-[22px] py-[11px] button"
-                      >
-                        See your Notes
-                      </button>
-                    </Link>
-                    <Link href="/habits">
-                      <button
-                        type="button"
-                        className=" text-white text-center text-xl not-italic font-normal leading-[normal] font-montserrat px-[22px] py-[11px] button"
-                      >
+                  <>
+                    <Button asChild size="sm" className="bg-blue-100 text-blue-700 hover:bg-blue-200 border border-blue-200">
+                      <Link href="/notes" className="flex items-center gap-2">
+                        <BookOpen className="w-4 h-4" />
+                        Daily Journal
+                      </Link>
+                    </Button>
+                    <Button asChild size="sm" className="bg-blue-100 text-blue-700 hover:bg-blue-200 border border-blue-200">
+                      <Link href="/habits" className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4" />
                         Habit Tracker
-                      </button>
-                    </Link>
+                      </Link>
+                    </Button>
                     <UserNav
                       image={user?.imageUrl}
                       name={user?.fullName!}
                       email={user?.primaryEmailAddress?.emailAddress!}
                     />
-                  </div>
+                  </>
                 ) : (
-                  <div className="hidden sm:flex absolute inset-y-0 right-0 gap-6 items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-                    <Link
-                      href="/notes"
-                      className="border rounded-lg border-solid border-[#2D2D2D] text-[#2D2D2D] text-center text-xl not-italic font-normal leading-[normal] font-montserrat px-[22px] py-2.5"
-                    >
-                      Sign in
-                    </Link>
-                    <Link
-                      href="/notes"
-                      className=" text-white text-center text-xl not-italic font-normal leading-[normal] font-montserrat px-[22px] py-[11px] button"
-                    >
-                      Get Started
-                    </Link>
-                  </div>
+                  <>
+                    <Button asChild variant="outline" size="sm">
+                      <Link href="/notes">
+                        Sign in
+                      </Link>
+                    </Button>
+                    <Button asChild size="sm">
+                      <Link href="/notes">
+                        Get Started
+                      </Link>
+                    </Button>
+                  </>
                 )}
-                <div className="block sm:hidden">
-                  {/* Mobile menu button*/}
-                  <DisclosureButton className="relative inline-flex  items-center justify-center rounded-md p-2 text-gray-400 focus:outline-hidden focus:ring-2 focus:ring-inset focus:ring-white">
-                    <span className="absolute -inset-0.5" />
-                    <span className="sr-only">Open main menu</span>
-                    {open ? (
-                      <XMarkIcon className="block h-6 w-6" aria-hidden="true" />
-                    ) : (
-                      <Bars3Icon className="block h-6 w-6" aria-hidden="true" />
-                    )}
-                  </DisclosureButton>
-                </div>
+              </div>
+
+              {/* Mobile menu button */}
+              <div className="md:hidden">
+                <DisclosureButton className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500">
+                  <span className="sr-only">Open main menu</span>
+                  {open ? (
+                    <X className="block h-6 w-6" aria-hidden="true" />
+                  ) : (
+                    <Menu className="block h-6 w-6" aria-hidden="true" />
+                  )}
+                </DisclosureButton>
               </div>
             </div>
           </div>
 
-          <DisclosurePanel className="sm:hidden">
-            <div className="space-y-1 px-2 pb-3 pt-2 flex flex-col gap-3 items-start">
-              {navigation.map((item) => (
+          {/* Mobile menu */}
+          <DisclosurePanel className="md:hidden">
+            <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-t border-gray-100">
+              {!user && navigation.map((item) => (
                 <DisclosureButton
                   key={item.name}
-                  as={Link}
-                  href={item.href}
-                  className="text-[#2D2D2D] text-center text-xl not-italic font-normal leading-[normal]"
-                  aria-current={item.current ? "page" : undefined}
+                  as="button"
+                  onClick={() => {
+                    const element = document.querySelector(item.href);
+                    if (element) {
+                      element.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                  className="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md"
                 >
                   {item.name}
                 </DisclosureButton>
               ))}
-              <div className="flex gap-6 items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-                <Link
-                  href="/notes"
-                  className="border rounded-lg border-solid border-[#2D2D2D] text-[#2D2D2D] text-center text-xl not-italic font-normal leading-[normal] font-montserrat px-5 py-[5px]"
-                >
-                  Sign in
-                </Link>
-                <Link
-                  href="/notes"
-                  className=" text-white text-center text-xl not-italic font-normal leading-[normal] font-montserrat px-5 py-1.5 button"
-                >
-                  Get Started
-                </Link>
-              </div>
-              {user && (
-                <div className="flex gap-6 items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-                  <Link
-                    href="/habits"
-                    className=" text-white text-center text-xl not-italic font-normal leading-[normal] font-montserrat px-5 py-1.5 button"
-                  >
-                    Habit Tracker
-                  </Link>
+              
+              {user ? (
+                <div className="pt-4 space-y-2">
+                  <Button asChild variant="outline" className="w-full justify-start">
+                    <Link href="/notes" className="flex items-center gap-2">
+                      <BookOpen className="w-4 h-4" />
+                      Daily Journal
+                    </Link>
+                  </Button>
+                  <Button asChild className="w-full justify-start">
+                    <Link href="/habits" className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4" />
+                      Habit Tracker
+                    </Link>
+                  </Button>
+                </div>
+              ) : (
+                <div className="pt-4 space-y-2">
+                  <Button asChild variant="outline" className="w-full justify-start">
+                    <Link href="/notes">
+                      Sign in
+                    </Link>
+                  </Button>
+                  <Button asChild className="w-full justify-start">
+                    <Link href="/notes">
+                      Get Started
+                    </Link>
+                  </Button>
                 </div>
               )}
             </div>

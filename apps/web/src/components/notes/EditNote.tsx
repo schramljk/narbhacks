@@ -52,7 +52,7 @@ export default function EditNote({ note, isOpen, onClose }: EditNoteProps) {
     <Transition.Root show={isOpen} as={Fragment}>
       <Dialog
         as="div"
-        className="relative z-10"
+        className="relative z-[60]"
         initialFocus={cancelButtonRef}
         onClose={onClose}
       >
@@ -68,7 +68,7 @@ export default function EditNote({ note, isOpen, onClose }: EditNoteProps) {
           <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
         </Transition.Child>
 
-        <form className="fixed inset-0 z-10 w-screen overflow-y-auto">
+        <div className="fixed inset-0 z-[60] w-screen overflow-y-auto">
           <div className="flex min-h-full items-end justify-center p-2 text-center sm:items-center sm:p-0">
             <Transition.Child
               as={Fragment}
@@ -89,6 +89,7 @@ export default function EditNote({ note, isOpen, onClose }: EditNoteProps) {
                     </Dialog.Title>
                   </div>
                   <Button
+                    type="button"
                     variant="ghost"
                     size="sm"
                     onClick={onClose}
@@ -176,6 +177,7 @@ export default function EditNote({ note, isOpen, onClose }: EditNoteProps) {
                 {/* Footer */}
                 <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200">
                   <Button
+                    type="button"
                     variant="outline"
                     onClick={onClose}
                     ref={cancelButtonRef}
@@ -183,6 +185,7 @@ export default function EditNote({ note, isOpen, onClose }: EditNoteProps) {
                     Cancel
                   </Button>
                   <Button
+                    type="button"
                     onClick={updateUserNote}
                     className="flex items-center gap-2"
                   >
@@ -193,7 +196,7 @@ export default function EditNote({ note, isOpen, onClose }: EditNoteProps) {
               </Dialog.Panel>
             </Transition.Child>
           </div>
-        </form>
+        </div>
       </Dialog>
     </Transition.Root>
   );

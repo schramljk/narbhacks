@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { Fragment, useState, useRef } from "react";
+import { Dialog, Transition } from "@headlessui/react";
 import { Button } from "@/components/common/button";
-import { Download, Share2, X } from "lucide-react";
+import { Download, Share2, X, BarChart3, TrendingUp, Target } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { api } from "@packages/backend/convex/_generated/api";
@@ -18,6 +19,7 @@ export function ShareProgressDialog({ isOpen, onClose }: ShareProgressDialogProp
   const [includeStats, setIncludeStats] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const shareableRef = useRef<HTMLDivElement>(null);
+  const cancelButtonRef = useRef(null);
   const { user } = useUser();
 
   // Get real data
@@ -199,10 +201,8 @@ export function ShareProgressDialog({ isOpen, onClose }: ShareProgressDialogProp
       link.download = `habit-progress-${new Date().toISOString().split('T')[0]}.png`;
       link.href = image;
       link.click();
-      
-      onClose();
     } catch (error) {
-      console.error("Error generating image:", error);
+      console.error('Failed to generate image:', error);
     } finally {
       setIsGenerating(false);
     }
@@ -211,7 +211,7 @@ export function ShareProgressDialog({ isOpen, onClose }: ShareProgressDialogProp
   const shareToSocial = async () => {
     setIsGenerating(true);
     try {
-      // Create canvas manually (same as generateImage)
+      // Generate the image first
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       if (!ctx) throw new Error('Could not get canvas context');
@@ -344,207 +344,251 @@ export function ShareProgressDialog({ isOpen, onClose }: ShareProgressDialogProp
       ctx.textAlign = 'center';
       ctx.fillText(`Generated on ${new Date().toLocaleDateString()}`, canvas.width / 2, yOffset + 40);
       
-      // Create blob and share
-      const blob = await new Promise<Blob>((resolve) => {
-        canvas.toBlob((blob) => resolve(blob!), "image/png");
-      });
-      
-      const file = new File([blob], "habit-progress.png", { type: "image/png" });
-      
-      if (navigator.share && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          title: "My Habit Progress",
-          text: "Check out my habit tracking progress!",
-          files: [file],
-        });
-      } else {
-        // Fallback to download
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.download = `habit-progress-${new Date().toISOString().split('T')[0]}.png`;
-        link.href = url;
-        link.click();
-        URL.revokeObjectURL(url);
-      }
-      
-      onClose();
+      // Convert to blob and share
+      canvas.toBlob(async (blob) => {
+        if (blob && navigator.share) {
+          const file = new File([blob], `habit-progress-${new Date().toISOString().split('T')[0]}.png`, { type: 'image/png' });
+          
+          try {
+            await navigator.share({
+              title: 'My Habit Progress',
+              text: `Check out my habit tracking progress! 🔥 ${analytics.currentStreak} day streak and ${Math.round(analytics.overallCompletionRate)}% completion rate.`,
+              files: [file]
+            });
+          } catch (error) {
+            console.error('Error sharing:', error);
+          }
+        } else {
+          // Fallback to download if sharing is not supported
+          const image = canvas.toDataURL("image/png");
+          const link = document.createElement("a");
+          link.download = `habit-progress-${new Date().toISOString().split('T')[0]}.png`;
+          link.href = image;
+          link.click();
+        }
+      }, 'image/png');
     } catch (error) {
-      console.error("Error sharing:", error);
+      console.error('Failed to share:', error);
     } finally {
       setIsGenerating(false);
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-gray-900">Share Your Progress</h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600"
+    <Transition.Root show={isOpen} as={Fragment}>
+      <Dialog
+        as="div"
+        className="relative z-[60]"
+        initialFocus={cancelButtonRef}
+        onClose={onClose}
+      >
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-300"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-200"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+        </Transition.Child>
+
+        <div className="fixed inset-0 z-[60] w-screen overflow-y-auto">
+          <div className="flex min-h-full items-end justify-center p-2 text-center sm:items-center sm:p-0">
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+              enterTo="opacity-100 translate-y-0 sm:scale-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 translate-y-0 sm:scale-100"
+              leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
-              <X size={24} />
-            </button>
-          </div>
-        </div>
-
-        <div className="p-6">
-          {/* Customization Options */}
-          <div className="mb-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Customize Your Share</h3>
-            <div className="space-y-3">
-              <div className="flex items-center space-x-3">
-                <input
-                  type="checkbox"
-                  checked={includeStreak}
-                  onChange={(e) => setIncludeStreak(e.target.checked)}
-                  className="rounded"
-                />
-                <label className="text-sm text-gray-700">Include current streak</label>
-              </div>
-              <div className="flex items-center space-x-3">
-                <input
-                  type="checkbox"
-                  checked={includeChart}
-                  onChange={(e) => setIncludeChart(e.target.checked)}
-                  className="rounded"
-                />
-                <label className="text-sm text-gray-700">Include weekly chart</label>
-              </div>
-              <div className="flex items-center space-x-3">
-                <input
-                  type="checkbox"
-                  checked={includeStats}
-                  onChange={(e) => setIncludeStats(e.target.checked)}
-                  className="rounded"
-                />
-                <label className="text-sm text-gray-700">Include completion stats</label>
-              </div>
-            </div>
-          </div>
-
-          {/* Preview */}
-          <div className="mb-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Preview</h3>
-            <div className="border rounded-lg p-4 bg-gray-50 flex justify-center">
-              <div ref={shareableRef} style={{ backgroundColor: 'white', borderRadius: '8px', padding: '24px', boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', width: "400px", height: "600px" }}>
+              <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl">
                 {/* Header */}
-                <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '8px' }}>
-                    <div style={{ width: '32px', height: '32px', background: 'linear-gradient(to right, #4ade80, #3b82f6)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '8px' }}>
-                      <span style={{ color: 'white', fontWeight: 'bold', fontSize: '14px' }}>H</span>
-                    </div>
-                    <h1 style={{ fontSize: '20px', fontWeight: 'bold', color: '#111827' }}>Habit Tracker</h1>
+                <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                  <div className="flex items-center gap-3">
+                    <Share2 className="w-6 h-6 text-blue-600" />
+                    <Dialog.Title as="h3" className="text-xl font-semibold text-gray-900">
+                      Share Progress
+                    </Dialog.Title>
                   </div>
-                  <p style={{ fontSize: '14px', color: '#6b7280' }}>
-                    {user?.firstName ? `${user.firstName}'s Progress Report` : 'My Progress Report'}
-                  </p>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={onClose}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="w-5 h-5" />
+                  </Button>
                 </div>
 
-                {/* Streak */}
-                {includeStreak && (
-                  <div style={{ background: 'linear-gradient(to right, #4ade80, #3b82f6)', borderRadius: '8px', padding: '16px', marginBottom: '16px', textAlign: 'center', color: 'white' }}>
-                    <div style={{ fontSize: '24px', fontWeight: 'bold' }}>
-                      🔥 {analytics.currentStreak} Day Streak
-                    </div>
-                    <div style={{ fontSize: '14px', opacity: 0.9 }}>
-                      {analytics.currentStreak > 0 ? "Keep it up!" : "Start building your streak!"}
-                    </div>
-                  </div>
-                )}
-
-                {/* Stats */}
-                {includeStats && (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-                    <div style={{ backgroundColor: '#f9fafb', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
-                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#16a34a' }}>
-                        {Math.round(analytics.overallCompletionRate)}%
+                {/* Content */}
+                <div className="p-6">
+                  <div className="space-y-6">
+                    {/* Options */}
+                    <div className="space-y-4">
+                      <h4 className="font-medium text-gray-900">Include in your progress report:</h4>
+                      
+                      <div className="space-y-3">
+                        <label className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            checked={includeStreak}
+                            onChange={(e) => setIncludeStreak(e.target.checked)}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          />
+                          <div className="flex items-center gap-2">
+                            <TrendingUp className="w-4 h-4 text-orange-500" />
+                            <span className="text-sm font-medium text-gray-700">Current Streak</span>
+                          </div>
+                        </label>
+                        
+                        <label className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            checked={includeStats}
+                            onChange={(e) => setIncludeStats(e.target.checked)}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          />
+                          <div className="flex items-center gap-2">
+                            <Target className="w-4 h-4 text-green-500" />
+                            <span className="text-sm font-medium text-gray-700">Statistics & Metrics</span>
+                          </div>
+                        </label>
+                        
+                        <label className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            checked={includeChart}
+                            onChange={(e) => setIncludeChart(e.target.checked)}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          />
+                          <div className="flex items-center gap-2">
+                            <BarChart3 className="w-4 h-4 text-blue-500" />
+                            <span className="text-sm font-medium text-gray-700">7-Day Chart</span>
+                          </div>
+                        </label>
                       </div>
-                      <div style={{ fontSize: '12px', color: '#6b7280' }}>Completion Rate</div>
                     </div>
-                    <div style={{ backgroundColor: '#f9fafb', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
-                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#2563eb' }}>
-                        {analytics.totalHabits}
+
+                    {/* Preview */}
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <h4 className="font-medium text-gray-900 mb-3">Preview:</h4>
+                      <div 
+                        ref={shareableRef}
+                        className="bg-white rounded-lg p-4 border max-h-64 overflow-y-auto"
+                      >
+                        <div className="text-center mb-4">
+                          <h3 className="text-lg font-bold text-gray-900">Habit Tracker</h3>
+                          <p className="text-sm text-gray-600">
+                            {user?.firstName ? `${user.firstName}'s Progress Report` : 'My Progress Report'}
+                          </p>
+                        </div>
+                        
+                        {includeStreak && (
+                          <div className="bg-gradient-to-r from-green-400 to-blue-500 text-white rounded-lg p-3 mb-3 text-center">
+                            <div className="text-xl font-bold">🔥 {analytics.currentStreak} Day Streak</div>
+                            <div className="text-sm">
+                              {analytics.currentStreak > 0 ? "Keep it up!" : "Start building your streak!"}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {includeStats && (
+                          <div className="grid grid-cols-2 gap-3 mb-3">
+                            <div className="bg-gray-100 rounded-lg p-2 text-center">
+                              <div className="text-lg font-bold text-green-600">{Math.round(analytics.overallCompletionRate)}%</div>
+                              <div className="text-xs text-gray-600">Completion Rate</div>
+                            </div>
+                            <div className="bg-gray-100 rounded-lg p-2 text-center">
+                              <div className="text-lg font-bold text-blue-600">{analytics.totalHabits}</div>
+                              <div className="text-xs text-gray-600">Active Habits</div>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {includeChart && (
+                          <div className="space-y-2">
+                            <div className="text-sm font-medium text-gray-900">Last 7 Days</div>
+                            <div className="flex items-end gap-1 h-16">
+                              {last7Days.map((count, i) => (
+                                <div
+                                  key={i}
+                                  className="flex-1 bg-green-500 rounded-t"
+                                  style={{
+                                    height: `${(count / maxCompletions) * 100}%`,
+                                    minHeight: count > 0 ? '4px' : '0'
+                                  }}
+                                />
+                              ))}
+                            </div>
+                            <div className="flex justify-between text-xs text-gray-500">
+                              {dayLabels.map((day, i) => (
+                                <span key={i}>{day}</span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {includeStats && (
+                          <div className="grid grid-cols-2 gap-3 mt-3">
+                            <div className="bg-green-50 rounded-lg p-2 text-center">
+                              <div className="text-xs font-medium text-green-800">Best Day</div>
+                              <div className="text-sm text-green-600">{analytics.bestDay}</div>
+                            </div>
+                            <div className="bg-red-50 rounded-lg p-2 text-center">
+                              <div className="text-xs font-medium text-red-800">Needs Work</div>
+                              <div className="text-sm text-red-600">{analytics.worstDay}</div>
+                            </div>
+                          </div>
+                        )}
+                        
+                        <div className="text-center text-xs text-gray-500 mt-3">
+                          Generated on {new Date().toLocaleDateString()}
+                        </div>
                       </div>
-                      <div style={{ fontSize: '12px', color: '#6b7280' }}>Active Habits</div>
                     </div>
                   </div>
-                )}
-
-                {/* Chart */}
-                {includeChart && (
-                  <div style={{ marginBottom: '16px' }}>
-                    <h3 style={{ fontSize: '14px', fontWeight: '500', color: '#111827', marginBottom: '8px' }}>Last 7 Days</h3>
-                    <div style={{ display: 'flex', alignItems: 'end', justifyContent: 'space-between', height: '80px' }}>
-                      {last7Days.map((completions, index) => (
-                        <div
-                          key={index}
-                          style={{ 
-                            backgroundColor: '#4ade80', 
-                            borderTopLeftRadius: '4px', 
-                            borderTopRightRadius: '4px', 
-                            width: '24px',
-                            height: `${(completions / maxCompletions) * 100}%` 
-                          }}
-                        />
-                      ))}
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
-                      {dayLabels.map((day, index) => (
-                        <span key={index}>{day}</span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Best/Worst Day */}
-                {includeStats && (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-                    <div style={{ backgroundColor: '#f0fdf4', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
-                      <div style={{ fontSize: '14px', fontWeight: '500', color: '#15803d' }}>Best Day</div>
-                      <div style={{ fontSize: '12px', color: '#16a34a' }}>{analytics.bestDay}</div>
-                    </div>
-                    <div style={{ backgroundColor: '#fef2f2', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
-                      <div style={{ fontSize: '14px', fontWeight: '500', color: '#dc2626' }}>Needs Work</div>
-                      <div style={{ fontSize: '12px', color: '#dc2626' }}>{analytics.worstDay}</div>
-                    </div>
-                  </div>
-                )}
+                </div>
 
                 {/* Footer */}
-                <div style={{ textAlign: 'center', fontSize: '12px', color: '#6b7280', marginTop: '16px' }}>
-                  Generated on {new Date().toLocaleDateString()}
+                <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={onClose}
+                    ref={cancelButtonRef}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={generateImage}
+                    disabled={isGenerating}
+                    className="flex items-center gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    {isGenerating ? "Generating..." : "Download"}
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={shareToSocial}
+                    disabled={isGenerating}
+                    className="flex items-center gap-2"
+                  >
+                    <Share2 className="w-4 h-4" />
+                    {isGenerating ? "Sharing..." : "Share"}
+                  </Button>
                 </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex flex-wrap gap-3">
-            <Button
-              onClick={generateImage}
-              disabled={isGenerating}
-              className="flex items-center space-x-2"
-            >
-              <Download size={16} />
-              <span>{isGenerating ? "Generating..." : "Download Image"}</span>
-            </Button>
-            
-            <Button
-              onClick={shareToSocial}
-              disabled={isGenerating}
-              className="flex items-center space-x-2"
-            >
-              <Share2 size={16} />
-              <span>{isGenerating ? "Sharing..." : "Share"}</span>
-            </Button>
+              </Dialog.Panel>
+            </Transition.Child>
           </div>
         </div>
-      </div>
-    </div>
+      </Dialog>
+    </Transition.Root>
   );
 } 

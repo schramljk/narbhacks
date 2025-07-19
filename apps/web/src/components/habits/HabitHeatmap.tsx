@@ -1,10 +1,11 @@
 "use client";
 
+import React, { Fragment, useRef, useState } from "react";
+import { Dialog, Transition } from "@headlessui/react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@packages/backend/convex/_generated/api";
-import { useState } from "react";
 import { Button } from "@/components/common/button";
-import { X, CheckCircle, Circle } from "lucide-react";
+import { X, CheckCircle, Circle, Calendar, Edit3 } from "lucide-react";
 
 interface DayEditDialogProps {
   date: string;
@@ -12,9 +13,10 @@ interface DayEditDialogProps {
   entries: any[];
   onClose: () => void;
   onSave: (updates: { habitId: string; completed: boolean }[]) => void;
+  isVisible: boolean;
 }
 
-function DayEditDialog({ date, habits, entries, onClose, onSave }: DayEditDialogProps) {
+function DayEditDialog({ date, habits, entries, onClose, onSave, isVisible }: DayEditDialogProps) {
   const [updates, setUpdates] = useState<{ habitId: string; completed: boolean; count: number }[]>(() => {
     // Initialize with current completion status and count
     return habits.map(habit => {
@@ -26,6 +28,36 @@ function DayEditDialog({ date, habits, entries, onClose, onSave }: DayEditDialog
       };
     });
   });
+  const cancelButtonRef = useRef(null);
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Update isOpen when isVisible changes
+  React.useEffect(() => {
+    if (isVisible) {
+      setIsOpen(true);
+    } else {
+      setIsOpen(false);
+    }
+  }, [isVisible]);
+
+  // Update updates when date or entries change
+  React.useEffect(() => {
+    if (date && entries.length > 0) {
+      setUpdates(habits.map(habit => {
+        const entry = entries.find(e => e.habitId === habit._id);
+        return {
+          habitId: habit._id,
+          completed: entry?.completed || false,
+          count: entry?.count || 0
+        };
+      }));
+    }
+  }, [date, entries, habits]);
+
+  const handleClose = () => {
+    setIsOpen(false);
+    setTimeout(() => onClose(), 200); // Wait for transition to complete
+  };
 
   const handleToggle = (habitId: string) => {
     setUpdates(prev => prev.map(update => 
@@ -67,7 +99,7 @@ function DayEditDialog({ date, habits, entries, onClose, onSave }: DayEditDialog
 
   const handleSave = () => {
     onSave(updates);
-    onClose();
+    handleClose();
   };
 
   const formatDate = (dateStr: string) => {
@@ -81,100 +113,153 @@ function DayEditDialog({ date, habits, entries, onClose, onSave }: DayEditDialog
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Edit {formatDate(date)}</h2>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <X className="w-4 h-4" />
-          </Button>
-        </div>
+    <Transition.Root show={isOpen} as={Fragment}>
+      <Dialog
+        as="div"
+        className="relative z-[60]"
+        initialFocus={cancelButtonRef}
+        onClose={handleClose}
+      >
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-300"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-200"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+        </Transition.Child>
 
-        <div className="space-y-3 mb-6">
-          {habits.map(habit => {
-            const update = updates.find(u => u.habitId === habit._id);
-            const hasTargetCount = habit.targetCount && habit.targetCount > 1;
-            
-            return (
-              <div key={habit._id} className="p-3 border rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium text-gray-900">{habit.title}</span>
-                  {!hasTargetCount && (
-                    <Button
-                      variant={update?.completed ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => handleToggle(habit._id)}
-                      className={`flex items-center gap-2 ${
-                        update?.completed 
-                          ? 'bg-green-600 hover:bg-green-700' 
-                          : 'hover:bg-green-50 hover:border-green-300'
-                      }`}
-                    >
-                      {update?.completed ? (
-                        <CheckCircle className="w-4 h-4" />
-                      ) : (
-                        <Circle className="w-4 h-4" />
-                      )}
-                      {update?.completed ? 'Done' : 'Mark Done'}
-                    </Button>
-                  )}
-                </div>
-                
-                {hasTargetCount && (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleDecrement(habit._id)}
-                        className="w-7 h-7 flex items-center justify-center rounded-full border border-gray-300 bg-white text-lg font-bold text-gray-600 hover:bg-gray-100 disabled:opacity-50"
-                        disabled={update?.count <= 0}
-                        type="button"
-                      >
-                        –
-                      </button>
-                      <span className="text-sm text-gray-600 min-w-[3rem] text-center">
-                        {update?.count || 0}/{habit.targetCount}
-                      </span>
-                      <button
-                        onClick={() => handleIncrement(habit._id)}
-                        className="w-7 h-7 flex items-center justify-center rounded-full border border-gray-300 bg-white text-lg font-bold text-gray-600 hover:bg-gray-100 disabled:opacity-50"
-                        disabled={(update?.count || 0) >= habit.targetCount}
-                        type="button"
-                      >
-                        +
-                      </button>
-                    </div>
-                    <div className="flex gap-1">
-                      {Array.from({ length: habit.targetCount }, (_, i) => (
-                        <div
-                          key={i}
-                          className={`w-2 h-2 rounded-full ${
-                            i < (update?.count || 0) ? 'bg-green-500' : 'bg-gray-200'
-                          }`}
-                        />
-                      ))}
-                    </div>
+        <div className="fixed inset-0 z-[60] w-screen overflow-y-auto">
+          <div className="flex min-h-full items-end justify-center p-2 text-center sm:items-center sm:p-0">
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+              enterTo="opacity-100 translate-y-0 sm:scale-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 translate-y-0 sm:scale-100"
+              leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+            >
+              <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md">
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                  <div className="flex items-center gap-3">
+                    <Calendar className="w-6 h-6 text-blue-600" />
+                    <Dialog.Title as="h3" className="text-lg font-semibold text-gray-900">
+                      Edit {formatDate(date)}
+                    </Dialog.Title>
                   </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleClose}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="w-5 h-5" />
+                  </Button>
+                </div>
 
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={onClose} className="flex-1">
-            Cancel
-          </Button>
-          <Button onClick={handleSave} className="flex-1">
-            Save Changes
-          </Button>
+                {/* Content */}
+                <div className="p-6">
+                  <div className="space-y-3 mb-6">
+                    {habits.map(habit => {
+                      const update = updates.find(u => u.habitId === habit._id);
+                      const hasTargetCount = habit.targetCount && habit.targetCount > 1;
+                      
+                      return (
+                        <div key={habit._id} className="p-3 border rounded-lg">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-medium text-gray-900">{habit.title}</span>
+                            {!hasTargetCount && (
+                              <Button
+                                variant={update?.completed ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => handleToggle(habit._id)}
+                                className={`flex items-center gap-2 ${
+                                  update?.completed 
+                                    ? 'bg-green-600 hover:bg-green-700' 
+                                    : 'hover:bg-green-50 hover:border-green-300'
+                                }`}
+                              >
+                                {update?.completed ? (
+                                  <CheckCircle className="w-4 h-4" />
+                                ) : (
+                                  <Circle className="w-4 h-4" />
+                                )}
+                                {update?.completed ? 'Done' : 'Mark Done'}
+                              </Button>
+                            )}
+                          </div>
+                          
+                          {hasTargetCount && (
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => handleDecrement(habit._id)}
+                                  className="w-7 h-7 flex items-center justify-center rounded-full border border-gray-300 bg-white text-lg font-bold text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+                                  disabled={update?.count <= 0}
+                                  type="button"
+                                >
+                                  –
+                                </button>
+                                <span className="text-sm text-gray-600 min-w-[3rem] text-center">
+                                  {update?.count || 0}/{habit.targetCount}
+                                </span>
+                                <button
+                                  onClick={() => handleIncrement(habit._id)}
+                                  className="w-7 h-7 flex items-center justify-center rounded-full border border-gray-300 bg-white text-lg font-bold text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+                                  disabled={(update?.count || 0) >= habit.targetCount}
+                                  type="button"
+                                >
+                                  +
+                                </button>
+                              </div>
+                              <div className="flex gap-1">
+                                {Array.from({ length: habit.targetCount }, (_, i) => (
+                                  <div
+                                    key={i}
+                                    className={`w-2 h-2 rounded-full ${
+                                      i < (update?.count || 0) ? 'bg-green-500' : 'bg-gray-200'
+                                    }`}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="flex gap-3 p-6 border-t border-gray-200">
+                  <Button 
+                    variant="outline" 
+                    onClick={handleClose} 
+                    className="flex-1"
+                    ref={cancelButtonRef}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleSave} 
+                    className="flex-1 flex items-center gap-2"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                    Save Changes
+                  </Button>
+                </div>
+              </Dialog.Panel>
+            </Transition.Child>
+          </div>
         </div>
-      </div>
-    </div>
+      </Dialog>
+    </Transition.Root>
   );
 }
 
@@ -386,15 +471,14 @@ export function HabitHeatmap() {
         </div>
       )}
 
-      {selectedDay && selectedDayEntries && (
-        <DayEditDialog
-          date={selectedDay}
-          habits={habits}
-          entries={selectedDayEntries}
-          onClose={() => setSelectedDay(null)}
-          onSave={handleSaveDay}
-        />
-      )}
+      <DayEditDialog
+        date={selectedDay || ""}
+        habits={habits}
+        entries={selectedDayEntries || []}
+        onClose={() => setSelectedDay(null)}
+        onSave={handleSaveDay}
+        isVisible={!!selectedDay && !!selectedDayEntries}
+      />
     </div>
   );
 } 

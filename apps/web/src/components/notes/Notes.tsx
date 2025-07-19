@@ -204,7 +204,11 @@ const Notes = () => {
         </div>
       )}
 
-      {/* CreateNote is now handled by the header button */}
+      {/* CreateNote Modal */}
+      <CreateNote 
+        open={showCreateDialog} 
+        onOpenChange={setShowCreateDialog} 
+      />
     </div>
   );
 };

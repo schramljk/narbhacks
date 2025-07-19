@@ -1,90 +1,90 @@
-import Image from "next/image";
+import { BookOpen, Cloud, Zap, Brain, Sparkles, Calendar, Shield, Clock } from "lucide-react";
 
 const benefits = [
   {
     title: "Effortless Note-Taking",
-    description: "Capture thoughts effortlessly with our intuitive interface",
-    image: "/images/goodNews.png",
+    description: "Capture thoughts effortlessly with our intuitive interface designed for seamless journaling.",
+    icon: BookOpen,
+    color: "blue",
   },
   {
     title: "Seamless Sync",
-    description:
-      "Access your notes anytime, anywhere, with seamless cloud synchronization.",
-    image: "/images/cloudSync.png",
+    description: "Access your notes anytime, anywhere, with seamless cloud synchronization across all devices.",
+    icon: Cloud,
+    color: "green",
   },
   {
     title: "Enhanced Productivity",
-    description:
-      "Let AI handle organization, so you can focus on what matters most.",
-    image: "/images/googleCalander.png",
+    description: "Let AI handle organization, so you can focus on what matters most in your daily life.",
+    icon: Zap,
+    color: "purple",
   },
   {
     title: "AI-Powered Insights",
-    description:
-      "Gain valuable insights with smart analytics based on your note patterns.",
-    image: "/images/bot.png",
+    description: "Gain valuable insights with smart analytics based on your note patterns and habits.",
+    icon: Brain,
+    color: "orange",
+  },
+  {
+    title: "Smart Habit Tracking",
+    description: "Build better habits with our intelligent tracking system and progress analytics.",
+    icon: Calendar,
+    color: "pink",
+  },
+  {
+    title: "Secure & Private",
+    description: "Your data is protected with enterprise-grade security and privacy controls.",
+    icon: Shield,
+    color: "indigo",
   },
 ];
 
+const colorClasses = {
+  blue: "bg-blue-100 text-blue-600",
+  green: "bg-green-100 text-green-600",
+  purple: "bg-purple-100 text-purple-600",
+  orange: "bg-orange-100 text-orange-600",
+  pink: "bg-pink-100 text-pink-600",
+  indigo: "bg-indigo-100 text-indigo-600",
+};
+
 const Benefits = () => {
   return (
-    <section id="Benefits" className="relative pointer-events-none">
-      <Image
-        src={"/images/blue-circle.svg"}
-        width={503}
-        height={531}
-        alt=""
-        className="absolute hidden sm:block -left-40 -top-48 h-[531px]"
-      />
-      <div className="container py-16 px-2 md:px-0">
-        <p className="text-black text-[17px] sm:text-3xl not-italic font-medium leading-[90.3%] tracking-[-0.75px] text-center font-montserrat pb-2 sm:pb-[18px]">
-          Benefits
-        </p>
-        <h3 className=" text-black text-3xl sm:text-[57px] not-italic font-medium leading-[90.3%] tracking-[-1.425px] font-montserrat text-center pb-[46px] sm:pb-[87px]">
-          Why Choose UseNotes
-        </h3>
-
-        <div className="relative">
-          <div className="hidden sm:flex justify-between items-center absolute inset-0 -z-10">
-            {Array(3)
-              .fill(0)
-              .map((_, index) => (
-                <Image
-                  src="/images/cricle.svg"
-                  width={183}
-                  height={193}
-                  alt="line"
-                  key={index}
-                />
-              ))}
+    <section id="Benefits" className="py-24 bg-white">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium mb-4">
+            <Sparkles className="w-4 h-4" />
+            Features
           </div>
+          <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
+            Why Choose <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">MosAIc</span>
+          </h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Experience the perfect blend of AI-powered intelligence and intuitive design
+          </p>
+        </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 z-10 ">
-            {benefits.map((benefit, index) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {benefits.map((benefit, index) => {
+            const IconComponent = benefit.icon;
+            return (
               <div
                 key={index}
-                className="flex gap-2 sm:gap-7 bg-white items-center border rounded-[17px] py-4 px-2 sm:py-12 sm:px-6 border-solid border-[#B8B5B5] shadow-xl"
+                className="group bg-white rounded-2xl p-8 shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
               >
-                <div className=" min-w-16 sm:min-w-28">
-                  <Image
-                    src={benefit.image}
-                    width={100}
-                    height={100}
-                    alt="benefit"
-                    className="sm:w-[100px] w-[58px]"
-                  />
+                <div className={`inline-flex p-3 rounded-xl ${colorClasses[benefit.color as keyof typeof colorClasses]} mb-6`}>
+                  <IconComponent className="w-6 h-6" />
                 </div>
-                <div className="">
-                  <h4 className="text-black text-[24px] sm:text-[42px] not-italic font-medium leading-[90.3%] tracking-[-1.05px] pb-2 sm:pb-6 font-montserrat">
-                    {benefit.title}
-                  </h4>
-                  <p className="font-montserrat pb-2 text-black text-[17px] sm:text-3xl not-italic font-normal leading-[90.3%] tracking-[-0.75px]">
-                    {benefit.description}
-                  </p>
-                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-4 group-hover:text-blue-600 transition-colors">
+                  {benefit.title}
+                </h3>
+                <p className="text-gray-600 leading-relaxed">
+                  {benefit.description}
+                </p>
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
       </div>
     </section>
