@@ -218,6 +218,18 @@ export const getStats = query({
       }
     }
 
+    // Calculate longest streak
+    let longestStreak = 0;
+    let tempStreak = 0;
+    for (const entry of sortedEntries) {
+      if (entry.completed) {
+        tempStreak++;
+        longestStreak = Math.max(longestStreak, tempStreak);
+      } else {
+        tempStreak = 0;
+      }
+    }
+
     // Calculate total completion rate
     const totalEntries = entries.length;
     const completedEntries = entries.filter(e => e.completed).length;
@@ -225,6 +237,7 @@ export const getStats = query({
 
     return {
       currentStreak,
+      longestStreak,
       totalEntries,
       completedEntries,
       completionRate: Math.round(completionRate),
@@ -317,6 +330,13 @@ export const getAnalytics = query({
     if (!identity) throw new Error("Not authenticated");
     const userId = identity.subject;
 
+    // Get all active habits
+    const habits = await ctx.db
+      .query("habits")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .filter((q) => q.eq(q.field("isActive"), true))
+      .collect();
+
     // Get all entries for this user
     const allEntries = await ctx.db
       .query("habitEntries")
@@ -354,26 +374,145 @@ export const getAnalytics = query({
     }
     const last7DaysCompletionRate = last7Possible > 0 ? (last7Completions / last7Possible) * 100 : 0;
 
-    // Best/worst day
-    let bestDay = null, worstDay = null, max = -1, min = 1e9;
-    for (const date in byDate) {
-      if (byDate[date].completed > max) {
-        max = byDate[date].completed;
-        bestDay = date;
+    // Calculate current streak (consecutive days with at least one completion)
+    const sortedDates = Object.keys(byDate).sort().reverse();
+    let currentStreak = 0;
+    const todayStr = new Date().toISOString().split('T')[0];
+    
+    for (const date of sortedDates) {
+      if (byDate[date].completed > 0) {
+        currentStreak++;
+      } else {
+        break;
       }
-      if (byDate[date].completed < min) {
-        min = byDate[date].completed;
-        worstDay = date;
+    }
+
+    // Calculate longest streak
+    let longestStreak = 0;
+    let tempStreak = 0;
+    for (const date of sortedDates) {
+      if (byDate[date].completed > 0) {
+        tempStreak++;
+        longestStreak = Math.max(longestStreak, tempStreak);
+      } else {
+        tempStreak = 0;
+      }
+    }
+
+    // Best/worst day (aggregate by day of week)
+    const dayStats: Record<string, { total: number; count: number }> = {
+      'Sunday': { total: 0, count: 0 },
+      'Monday': { total: 0, count: 0 },
+      'Tuesday': { total: 0, count: 0 },
+      'Wednesday': { total: 0, count: 0 },
+      'Thursday': { total: 0, count: 0 },
+      'Friday': { total: 0, count: 0 },
+      'Saturday': { total: 0, count: 0 }
+    };
+    
+    for (const date in byDate) {
+      const dayOfWeek = new Date(date + 'T00:00:00').getDay();
+      const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const dayName = dayNames[dayOfWeek];
+      
+      dayStats[dayName].total += byDate[date].completed;
+      dayStats[dayName].count += 1;
+    }
+    
+    // Calculate average completions per day of week
+    let bestDay = "Monday", worstDay = "Sunday";
+    let max = -1, min = 1e9;
+    
+    for (const day in dayStats) {
+      const avgCompletions = dayStats[day].count > 0 ? dayStats[day].total / dayStats[day].count : 0;
+      
+      if (avgCompletions > max) {
+        max = avgCompletions;
+        bestDay = day;
+      }
+      if (avgCompletions < min) {
+        min = avgCompletions;
+        worstDay = day;
       }
     }
 
     return {
       overallCompletionRate: Math.round(overallCompletionRate),
-      last7DaysCompletionRate: Math.round(last7DaysCompletionRate),
+      recentCompletionRate: Math.round(last7DaysCompletionRate),
+      last7DaysCompletionRate: Math.round(last7DaysCompletionRate), // For backward compatibility
       bestDay,
-      bestDayCount: max === -1 ? 0 : max,
       worstDay,
-      worstDayCount: min === 1e9 ? 0 : min,
+      bestDayCount: max === -1 ? 0 : Math.round(max), // For backward compatibility
+      worstDayCount: min === 1e9 ? 0 : Math.round(min), // For backward compatibility
+      totalHabits: habits.length,
+      currentStreak,
+      longestStreak,
     };
+  },
+}); 
+
+// Get habit completion data for calendar heatmap (last 365 days)
+export const getHeatmapData = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    const userId = identity.subject;
+    const today = new Date();
+    const days = 365;
+    const result: { date: string; completed: number; total: number }[] = [];
+
+    // Get all active habits for this user
+    const activeHabits = await ctx.db
+      .query("habits")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .filter((q) => q.eq(q.field("isActive"), true))
+      .collect();
+
+    const totalActiveHabits = activeHabits.length;
+
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      
+      // Get entries for this date
+      const entries = await ctx.db
+        .query("habitEntries")
+        .withIndex("by_user_date", (q) => q.eq("userId", userId).eq("date", dateStr))
+        .collect();
+      
+      const completed = entries.filter(e => e.completed).length;
+      
+      // If there are active habits but no entries for this date, count as 0 completed out of total
+      // If there are no active habits, count as 0/0
+      const total = totalActiveHabits > 0 ? totalActiveHabits : 0;
+      
+      result.push({ date: dateStr, completed, total });
+    }
+
+    return result;
+  },
+}); 
+
+// Get habit entries for a specific date
+export const getEntriesForDate = query({
+  args: { date: v.string() },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    const userId = identity.subject;
+    const entries = await ctx.db
+      .query("habitEntries")
+      .withIndex("by_user_date", (q) => q.eq("userId", userId).eq("date", args.date))
+      .collect();
+
+    return entries;
   },
 }); 

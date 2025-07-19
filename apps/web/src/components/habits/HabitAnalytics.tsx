@@ -3,9 +3,17 @@
 import { useQuery } from "convex/react";
 import { api } from "@packages/backend/convex/_generated/api";
 
-function formatDay(dateStr: string | null) {
-  if (!dateStr) return "-";
-  const date = new Date(dateStr + 'T00:00:00');
+function formatDay(dayOrDate: string | null) {
+  if (!dayOrDate) return "-";
+  
+  // If it's already a day name (like "Monday"), return it
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  if (dayNames.includes(dayOrDate)) {
+    return dayOrDate;
+  }
+  
+  // If it's a date string, format it
+  const date = new Date(dayOrDate + 'T00:00:00');
   return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
 }
 

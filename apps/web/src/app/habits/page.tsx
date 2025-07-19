@@ -3,17 +3,20 @@
 import { useQuery } from "convex/react";
 import { api } from "@packages/backend/convex/_generated/api";
 import { Button } from "@/components/common/button";
-import { Plus, CheckCircle, Circle, TrendingUp } from "lucide-react";
+import { Plus, CheckCircle, Circle, TrendingUp, Share2 } from "lucide-react";
 import { useState } from "react";
-import { CreateHabitDialog, HabitCard } from "@/components/habits";
+import { CreateHabitDialog, HabitCard, ShareProgressDialog } from "@/components/habits";
 import Header from "@/components/Header";
 import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import { HabitCompletionGraph } from "@/components/habits/HabitCompletionGraph";
 import { HabitAnalytics } from "@/components/habits/HabitAnalytics";
+import { HabitHeatmap } from "@/components/habits/HabitHeatmap";
 
 export default function HabitsPage() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
   const dashboard = useQuery(api.habits.getDashboard);
+  const analytics = useQuery(api.habits.getAnalytics);
 
   if (!dashboard) {
     return (
@@ -36,18 +39,35 @@ export default function HabitsPage() {
           {/* Header */}
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Habit Tracker</h1>
-              <p className="text-gray-600 mt-2">
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-3xl font-bold text-gray-900">Habit Tracker</h1>
+                {analytics && analytics.currentStreak > 0 && (
+                  <div className="bg-gradient-to-r from-orange-400 to-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1">
+                    🔥 {analytics.currentStreak} Day Streak
+                  </div>
+                )}
+              </div>
+              <p className="text-gray-600">
                 Track your daily habits and build lasting routines
               </p>
             </div>
-            <Button
-              onClick={() => setShowCreateDialog(true)}
-              className="flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              New Habit
-            </Button>
+            <div className="flex gap-3">
+              <Button
+                onClick={() => setShowShareDialog(true)}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <Share2 className="w-4 h-4" />
+                Share Progress
+              </Button>
+              <Button
+                onClick={() => setShowCreateDialog(true)}
+                className="flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                New Habit
+              </Button>
+            </div>
           </div>
 
           {/* Stats Cards */}
@@ -118,11 +138,17 @@ export default function HabitsPage() {
           <div className="mt-12">
             <HabitAnalytics />
             <HabitCompletionGraph />
+            <HabitHeatmap />
           </div>
 
           <CreateHabitDialog
             open={showCreateDialog}
             onOpenChange={setShowCreateDialog}
+          />
+          
+          <ShareProgressDialog
+            isOpen={showShareDialog}
+            onClose={() => setShowShareDialog(false)}
           />
         </div>
       </SignedIn>

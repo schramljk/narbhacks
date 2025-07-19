@@ -7,7 +7,8 @@ export default defineSchema({
     title: v.string(),
     content: v.string(),
     summary: v.optional(v.string()),
-  }),
+    date: v.string(), // YYYY-MM-DD format for journal entries
+  }).index("by_user_date", ["userId", "date"]),
   
   habits: defineTable({
     userId: v.string(),

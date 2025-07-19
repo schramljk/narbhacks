@@ -6,6 +6,7 @@ import { CheckCircle, Circle, MoreVertical, Target } from "lucide-react";
 import { Button } from "@/components/common/button";
 import { useState } from "react";
 import { HabitDetailsDialog } from "@/components/habits";
+import { HabitStreak } from "./HabitStreak";
 
 interface HabitCardProps {
   habit: {
@@ -108,6 +109,7 @@ export function HabitCard({ habit }: HabitCardProps) {
                 </div>
               )}
             </div>
+            <HabitStreak habitId={habit._id} compact />
           </div>
           <Button
             variant="ghost"

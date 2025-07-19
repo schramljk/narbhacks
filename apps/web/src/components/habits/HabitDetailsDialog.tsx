@@ -6,6 +6,7 @@ import { Button } from "@/components/common/button";
 import { useState } from "react";
 import { X, Trash2, Edit, Calendar, Target, TrendingUp } from "lucide-react";
 import { EditHabitDialog } from "./EditHabitDialog";
+import { HabitStreak } from "./HabitStreak";
 
 interface HabitDetailsDialogProps {
   habitId: string;
@@ -78,10 +79,7 @@ export function HabitDetailsDialog({ habitId, open, onOpenChange }: HabitDetails
             <h3 className="font-medium text-gray-900 mb-2">Statistics</h3>
             {stats ? (
               <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-blue-600" />
-                  <span><strong>Current Streak:</strong> {stats.currentStreak} days</span>
-                </div>
+                <HabitStreak habitId={habitId} />
                 <div className="flex items-center gap-2">
                   <Target className="w-4 h-4 text-green-600" />
                   <span><strong>Completion Rate:</strong> {stats.completionRate}%</span>

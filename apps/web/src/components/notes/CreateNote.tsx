@@ -7,24 +7,54 @@ import Checkbox from "./Checkbox";
 import { api } from "@packages/backend/convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 
-export default function CreateNote() {
-  const [open, setOpen] = useState(false);
+interface CreateNoteProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export default function CreateNote({ open: externalOpen, onOpenChange }: CreateNoteProps = {}) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [isChecked, setIsChecked] = useState<boolean>(false);
+  const [date, setDate] = useState(() => {
+    // Get today's date in the user's local timezone
+    const now = new Date();
+    // Use toLocaleDateString to ensure we get the local date
+    const localDate = now.toLocaleDateString('en-CA'); // en-CA format is YYYY-MM-DD
+    console.log('Initial date set to:', localDate);
+    console.log('Current Date object:', now);
+    console.log('Timezone offset:', now.getTimezoneOffset());
+    return localDate;
+  });
+
+  // Use external state if provided, otherwise use internal state
+  const open = externalOpen !== undefined ? externalOpen : internalOpen;
+  const setOpen = onOpenChange || setInternalOpen;
 
   const cancelButtonRef = useRef(null);
 
   const createNote = useMutation(api.notes.createNote);
-  const openaiKeySet = useQuery(api.openai.openaiKeySet) ?? true;
+  const openaiKeySet = useQuery(api.openai.openaiKeySet) ?? false;
 
   const createUserNote = async () => {
+    console.log('Creating note with date:', date);
+    console.log('Current local date:', new Date().toLocaleDateString('en-CA'));
+    console.log('Date input value:', date);
+    console.log('Date type:', typeof date);
+    
     await createNote({
       title,
       content,
       isSummary: isChecked,
+      date,
     });
     setOpen(false);
+    setTitle("");
+    setContent("");
+    const now = new Date();
+    const localDate = now.toLocaleDateString('en-CA'); // en-CA format is YYYY-MM-DD
+    setDate(localDate);
   };
 
   return (
@@ -43,7 +73,7 @@ export default function CreateNote() {
           />
           <span className="text-[17px] sm:text-3xl not-italic font-medium leading-[79%] tracking-[-0.75px]">
             {" "}
-            New Note
+            New Journal Entry
           </span>
         </button>
       </div>
@@ -86,9 +116,28 @@ export default function CreateNote() {
                           as="h3"
                           className="text-black text-center text-xl sm:text-left sm:text-[35px] pb-6 sm:pb-8 not-italic font-semibold leading-[90.3%] tracking-[-0.875px]"
                         >
-                          Create New Note
+                          New Journal Entry
                         </Dialog.Title>
                         <div className="mt-2 space-y-3">
+                          <div className="pb-2">
+                            <label
+                              htmlFor="date"
+                              className=" text-black text-[17px] sm:text-2xl not-italic font-medium leading-[90.3%] tracking-[-0.6px]"
+                            >
+                              Date
+                            </label>
+                            <div className="mt-2">
+                              <input
+                                id="date"
+                                name="date"
+                                type="date"
+                                value={date}
+                                onChange={(e) => setDate(e.target.value)}
+                                className="border shadow-[0px_1px_2px_0px_rgba(16,24,40,0.05)] rounded-lg border-solid border-[#D0D5DD] bg-white w-full py-2.5 px-[14px] text-black text-[17px] not-italic font-light leading-[90.3%] tracking-[-0.425px] sm:text-2xl"
+                              />
+                            </div>
+                          </div>
+
                           <div className="pb-2">
                             <label
                               htmlFor="title"
@@ -101,7 +150,7 @@ export default function CreateNote() {
                                 id="title"
                                 name="title"
                                 type="text"
-                                placeholder="Note Title"
+                                placeholder="What's on your mind today?"
                                 autoComplete="title"
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
@@ -115,21 +164,21 @@ export default function CreateNote() {
                               htmlFor="description"
                               className=" text-black text-[17px] sm:text-2xl not-italic font-medium leading-[90.3%] tracking-[-0.6px]"
                             >
-                              The Note
+                              Journal Entry
                             </label>
                             <div className="mt-2 pb-[18px]">
                               <textarea
                                 id="description"
                                 name="description"
                                 rows={8}
-                                placeholder="Start your note "
+                                placeholder="Write about your day, thoughts, feelings, or anything you'd like to remember..."
                                 className="block w-full rounded-md border-0 py-1.5  border-[#D0D5DD] text-2xl shadow-xs ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600  sm:leading-6 text-black text-[17px] not-italic font-light leading-[90.3%] tracking-[-0.425px] sm:text-2xl"
                                 value={content}
                                 onChange={(e) => setContent(e.target.value)}
                               />
                             </div>
                             <p className="text-black text-[17px] sm:text-2xl not-italic font-medium leading-[90.3%] tracking-[-0.6px]">
-                              AI Features
+                              AI Summary
                             </p>
                           </div>
 
@@ -148,7 +197,7 @@ export default function CreateNote() {
                       className="button text-white text-center text-[17px] sm:text-2xl not-italic font-semibold leading-[90.3%] tracking-[-0.6px] px-[70px] py-2"
                       onClick={createUserNote}
                     >
-                      Create
+                      Save Entry
                     </button>
                   </div>
                 </Dialog.Panel>

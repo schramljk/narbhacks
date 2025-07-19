@@ -25,21 +25,15 @@ const Checkbox = ({
           htmlFor="candidates"
           className=" text-black text-[17px] sm:text-2xl pb-2 not-italic font-light leading-[90.3%] tracking-[-0.6px]"
         >
-          Advanced Summarization {openaiKeySet ? "" : " (Disabled)"}
+          AI Summary {openaiKeySet ? "" : " (Basic Summary Available)"}
         </label>
         {openaiKeySet ? (
           <p className=" text-black text-sm sm:text-[17px] not-italic font-extralight leading-[90.3%] tracking-[-0.425px]">
-            Check this box if you want to generate summaries using AI
+            Check this box to generate an AI-powered summary of your entry
           </p>
         ) : (
-          <p>
-            <a
-              className="text-blue-500"
-              target="_blank"
-              href="https://dashboard.convex.dev/deployment/settings/environment-variables?var=OPENAI_API_KEY"
-            >
-              Set an OPENAI_API_KEY in your environment variables here.
-            </a>
+          <p className=" text-black text-sm sm:text-[17px] not-italic font-extralight leading-[90.3%] tracking-[-0.425px]">
+            AI summaries are currently unavailable due to API quota limits. Basic summaries will be generated instead.
           </p>
         )}
       </div>

@@ -1,4 +1,9 @@
-export { CreateHabitDialog } from './CreateHabitDialog';
-export { EditHabitDialog } from './EditHabitDialog';
-export { HabitCard } from './HabitCard';
-export { HabitDetailsDialog } from './HabitDetailsDialog';
+export { CreateHabitDialog } from "./CreateHabitDialog";
+export { EditHabitDialog } from "./EditHabitDialog";
+export { HabitCard } from "./HabitCard";
+export { HabitDetailsDialog } from "./HabitDetailsDialog";
+export { HabitCompletionGraph } from "./HabitCompletionGraph";
+export { HabitAnalytics } from "./HabitAnalytics";
+export { HabitStreak } from "./HabitStreak";
+export { HabitHeatmap } from "./HabitHeatmap";
+export { ShareProgressDialog } from "./ShareProgressDialog";
